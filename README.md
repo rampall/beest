@@ -36,6 +36,7 @@ Beest is a TUI app to install, run and manage multiple bee nodes. It also integr
 - [ ] Run Etherproxy
 - [ ] Funding wallet + Automatic funding of full nodes
 - [ ] Monitor Bees
+- [ ] Run Gateway
 
 ## Development
 
