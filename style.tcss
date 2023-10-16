@@ -1,0 +1,67 @@
+#sidebar {
+    width: 15%;
+}
+RichLog{
+    background:black;
+    margin-top:2;
+    padding:1 2;
+    height:auto;
+    min-height:8;
+}
+Page{
+    padding:1 2 0 2;
+}
+#logr{
+    height:15%;
+}
+Button{
+    background:#FF7A00;
+}
+Button:hover{
+    background:#F60;
+}
+.busy{
+    background:#FF7A00;
+}
+InstallBeePage{
+    align: center top;
+}
+
+Label.d{
+    color:#666666;
+}
+
+BusyPopup {
+    align: center middle;    
+    background: $surface 50%;
+}
+#popup {
+    align: center middle;
+    grid-size: 2;
+    grid-gutter: 1 2;
+    grid-rows: 1fr 3;
+    padding: 0 1;
+    width: 13;
+    height: 5;
+    border: thick $background 80%;
+    background: $surface 50%;
+}
+TabPane > Horizontal{
+    height:3;
+}
+TabPane > Horizontal > Label{
+    margin-top:1;
+    width:20;
+}
+.submit{
+    padding-top:1;
+    padding-left:21;
+    height:4;
+}
+Horizontal > Select{
+}
+Logr .clear{
+    width:100%;
+    background:red;
+    margin-bottom:1;
+}
