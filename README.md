@@ -17,6 +17,15 @@ Beest is a TUI app to install, run and manage multiple bee nodes. It also integr
 - https://github.com/fairDataSociety/fdp-play
 - https://github.com/ethersphere/swarm-cli
 
+## Running Beest
+
+```
+git clone https://github.com/rampall/beest.git
+cd beest
+pip install textual pupdb
+python3 ./beest.py
+```
+
 ## Screenshots
 
 ![image](https://github.com/rampall/beest/assets/520570/72bbe3ef-67e3-46a3-a107-46f7c5e9bbfa)
@@ -37,12 +46,3 @@ Beest is a TUI app to install, run and manage multiple bee nodes. It also integr
 - [ ] Funding wallet + Automatic funding of full nodes
 - [ ] Monitor Bees
 - [ ] Run Gateway
-
-## Development
-
-```
-git clone https://github.com/rampall/beest.git
-cd beest
-pip install textual pupdb
-python3 ./beest.py
-```
