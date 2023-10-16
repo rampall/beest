@@ -19,9 +19,9 @@ Beest is a TUI app to install, run and manage multiple bee nodes. It also integr
 
 ## Screenshots
 
-![image](https://github.com/rampall/beest/assets/520570/0f48e819-864e-485f-a8d2-754393cd5692)
-![image](https://github.com/rampall/beest/assets/520570/16d1d3a4-6a54-4059-b480-a46af6da6a03)
-![image](https://github.com/rampall/beest/assets/520570/e048c266-305f-4d29-9e13-6cbcab649cb2)
+![image](https://github.com/rampall/beest/assets/520570/72bbe3ef-67e3-46a3-a107-46f7c5e9bbfa)
+![image](https://github.com/rampall/beest/assets/520570/afcb7d5e-66de-43d2-94bf-29ee7490fea3)
+![image](https://github.com/rampall/beest/assets/520570/aa18e06d-74fb-4246-885d-2cb7d3625794)
 
 ## Features
 
