@@ -3,7 +3,7 @@
 APP_NAME="bee"
 REPO_URL="https://github.com/ethersphere/bee"
 
-: "${USE_SUDO:="true"}"
+: "${USE_SUDO:="false"}"
 : "${BEE_INSTALL_DIR:="$HOME/.beest/bin/bee"}"
 mkdir -p "$BEE_INSTALL_DIR"
 
@@ -64,7 +64,9 @@ supported() {
 # if it needs to be changed.
 check_installed_version() {
   if [[ -f "${BEE_INSTALL_DIR}/${APP_NAME}" ]]; then
-    local version=$(bee version 2>&1)
+    local version=$("${BEE_INSTALL_DIR}/${APP_NAME}" version 2>&1)
+    echo "version = $version"
+    echo "${BEE_INSTALL_DIR}/${APP_NAME}"
     if [[ "${version%-*}" == "${TAG#v}" ]]; then
       echo "bee ${version} is already ${DESIRED_VERSION:-latest}"
       return 0
@@ -203,18 +205,18 @@ test_binary
 cleanup
 
 # packages=(pm2 zx tslib tsx)
-packages=(pm2 @ethersphere/swarm-cli)
+# packages=(pm2 @ethersphere/swarm-cli)
 
-for package in "${packages[@]}"; do
-      echo ""
-      echo "[cyan]INSTALL $package:[/cyan]"
-      echo ""
-        # installed_version=$(npm list -g "$package" | grep -oP '(?<=@).*')
-        # if [[ -z "$installed_version" ]]; then
-            echo "Installing $package..."
-            npm i --no-audit --no-fund -g "$package"
-        # else
-            installed_version=$(npm list -g "$package" | grep -oP '(?<=@).*')
-            echo "$package is installed (version: $installed_version)"
-        # fi
-done
+# for package in "${packages[@]}"; do
+#       echo ""
+#       echo "[cyan]INSTALL $package:[/cyan]"
+#       echo ""
+#         # installed_version=$(npm list -g "$package" | grep -oP '(?<=@).*')
+#         # if [[ -z "$installed_version" ]]; then
+#             echo "Installing $package..."
+#             npm i --no-audit --no-fund -g "$package"
+#         # else
+#             installed_version=$(npm list -g "$package" | grep -oP '(?<=@).*')
+#             echo "$package is installed (version: $installed_version)"
+#         # fi
+# done
