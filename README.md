@@ -27,10 +27,10 @@ python3 ./beest.py
 ```
 
 ## Screenshots
-
-![image](https://github.com/rampall/beest/assets/520570/72bbe3ef-67e3-46a3-a107-46f7c5e9bbfa)
-![image](https://github.com/rampall/beest/assets/520570/afcb7d5e-66de-43d2-94bf-29ee7490fea3)
-![image](https://github.com/rampall/beest/assets/520570/aa18e06d-74fb-4246-885d-2cb7d3625794)
+![image](https://github.com/rampall/beest/assets/520570/91b3c788-bfa6-4000-9c8a-ba5de203a8e7)
+![image](https://github.com/rampall/beest/assets/520570/03b8a140-c603-44be-917d-40961c97702e)
+![image](https://github.com/rampall/beest/assets/520570/42239999-d72a-463c-b793-0cb124027461)
+![image](https://github.com/rampall/beest/assets/520570/fec70fd9-ffc4-4a43-92a3-ef2fe36a74f6)
 
 ## Features
 
