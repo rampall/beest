@@ -39,7 +39,7 @@ python3 ./beest.py
 - [x] Install etherproxy
 - [x] Install Bee Factory
 - [x] Install FDP Play
-- [x] Run bee in Ultralight, Light & Full mode
+- [x] Run bee in Ultralight mode
 - [x] Stop all bees
 - [x] Remove all bees
 - [ ] Run Etherproxy
