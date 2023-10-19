@@ -23,14 +23,12 @@ class i():
     def err(message):
         print(f"[red]ERROR {message}[/red]")
 
-
 BEEST_DIR = os.path.expanduser(f"~/.beest")
 BEES_DIR = f"{BEEST_DIR}/bees"
 BEES_SCRIPT_DIR = f"{BEEST_DIR}/bees/scripts"
 BEES_DATA_DIR = f"{BEEST_DIR}/bees/datadir"
 
 CONFIG = PupDB(f"{BEEST_DIR}/config.json")
-
 
 def ensure_init(bee_id):
     BEE_DATA_DIR = f"{BEES_DATA_DIR}/{bee_id}"
@@ -77,16 +75,17 @@ def next_free_port(port, max_port=65535):
     raise IOError('no free ports')
 
 
-def add_bee_script(mode, verbosity, rpc):
+def add_bee_script(mode, verbosity, rpc, nbhood):
     id = get_new_beeid()
     bee_id = f"bee_{str(id).zfill(4)}"
     ensure_init(bee_id)
-    # print(CONFIG)
-    # print(CONFIG.get('start_port'))
+
     bee_api_port = next_free_port(CONFIG.get('start_port'))
     bee_p2p_port = next_free_port(bee_api_port+1)
     bee_debug_port = next_free_port(bee_p2p_port+1)
+    
     CONFIG.set('start_port', bee_debug_port+1)
+    CONFIG.set(bee_id,[bee_api_port,bee_p2p_port,bee_debug_port])
     if rpc != "":
         rpc_list = CONFIG.get('rpc_list') or {}
         rpc_list[rpc] = rpc
@@ -97,6 +96,10 @@ def add_bee_script(mode, verbosity, rpc):
         + f" --api-addr :{bee_api_port} --p2p-addr :{bee_p2p_port} --debug-api-addr :{bee_debug_port}"
         + f" --verbosity {verbosity} --data-dir {BEEST_DIR}/bees/datadir/{bee_id} --password-file {BEEST_DIR}/bees/.bee_password" 
     )
+
+    if nbhood != '':
+        cmd = cmd + f' --target-neighborhood "{nbhood}"'
+
     match mode:
         case "ultralight":
             cmd = cmd + " --full-node=false --swap-enable=false"
@@ -108,8 +111,10 @@ def add_bee_script(mode, verbosity, rpc):
     with open(f"{BEES_SCRIPT_DIR}/{bee_id}.sh", "w") as file:
         file.write(cmd)
     print(f"[green]INFO[green] CREATED: {BEES_SCRIPT_DIR}/{bee_id}.sh")
-    os.system(
-        f"pm2 start {BEES_SCRIPT_DIR}/{bee_id}.sh --time --name {bee_id} --namespace bees")
+    scmd = f"pm2 start {BEES_SCRIPT_DIR}/{bee_id}.sh --time --name {bee_id} --namespace bees" 
+    print(cmd)
+    print(scmd)
+    os.system(scmd)
     # os.system(f"pm2 log {bee_id}")
 
 
@@ -117,7 +122,8 @@ def main(argv):
     verbosity = 0
     mode = 'ultralight'
     rpc = ''
-    opts, args = getopt.getopt(argv, "v:m:u:", ["verbosity=", "mode=", "rpc="])
+    nbhood = ''
+    opts, args = getopt.getopt(argv, "v:m:r:n:", ["verbosity=", "mode=", "rpc=", "nbhood="])
     for opt, arg in opts:
         if opt in ("-v", "--verbosity"):
             verbosity = arg
@@ -125,10 +131,12 @@ def main(argv):
             mode = arg
         if opt in ("-r", "--rpc"):
             rpc = arg
+        if opt in ("-t", "--nbhood"):
+            target = arg
     # print(f"verbosity : {verbosity}")
     # print(f"mode : {mode}")
     # print(f"rpc : {rpc}")
-    add_bee_script(mode,verbosity,rpc)
+    add_bee_script(mode,verbosity,rpc,target)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

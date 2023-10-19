@@ -65,8 +65,8 @@ supported() {
 check_installed_version() {
   if [[ -f "${BEE_INSTALL_DIR}/${APP_NAME}" ]]; then
     local version=$("${BEE_INSTALL_DIR}/${APP_NAME}" version 2>&1)
-    echo "version = $version"
-    echo "${BEE_INSTALL_DIR}/${APP_NAME}"
+    echo "[orange1]LATEST VERSION:[/orange1] ${TAG#v}"
+    echo "[orange1]INSTALLED VERSION:[/orange1] ${version%-*}"
     if [[ "${version%-*}" == "${TAG#v}" ]]; then
       echo "bee ${version} is already ${DESIRED_VERSION:-latest}"
       return 0
@@ -187,9 +187,9 @@ done
 set +u
 echo "[cyan]INSTALL bee:[/cyan]"
 echo ""
-echo "detecting arch..."
+# echo "detecting arch..."
 detect_arch
-echo "detecting os.."
+# echo "detecting os.."
 detect_os
 supported
 check_tag_provided || check_latest_version
@@ -204,19 +204,25 @@ test_binary
 # echo "cleaning up..."
 cleanup
 
-# packages=(pm2 zx tslib tsx)
-# packages=(pm2 @ethersphere/swarm-cli)
+packages=(pm2 @ethersphere/swarm-cli)
 
-# for package in "${packages[@]}"; do
-#       echo ""
-#       echo "[cyan]INSTALL $package:[/cyan]"
-#       echo ""
-#         # installed_version=$(npm list -g "$package" | grep -oP '(?<=@).*')
-#         # if [[ -z "$installed_version" ]]; then
-#             echo "Installing $package..."
-#             npm i --no-audit --no-fund -g "$package"
-#         # else
-#             installed_version=$(npm list -g "$package" | grep -oP '(?<=@).*')
-#             echo "$package is installed (version: $installed_version)"
-#         # fi
-# done
+for package in "${packages[@]}"; do
+    echo ""
+    echo "[cyan]INSTALL $package:[/cyan]"
+    echo ""
+
+    installed_version=$(npm list -g "$package" | grep -oP '(?<=@)[^@]*$')
+    latest_version=$(npm show "$package" version)
+    echo "[orange1]LATEST VERSION:[/orange1] $latest_version"
+    echo "[orange1]INSTALLED VERSION:[/orange1] $installed_version"
+
+    if [[ -z "$installed_version" ]]; then
+        echo "Installing $package..."
+        npm i --no-audit --no-fund -g "$package"
+    elif [[ "$installed_version" != "$latest_version" ]]; then
+        echo "Updating $package..."
+        npm update -g "$package"
+    else
+        echo "$package is already installed (version: $installed_version)"
+    fi
+done

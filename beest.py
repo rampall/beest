@@ -1,3 +1,4 @@
+from textual import on
 from textual.app import App, ComposeResult, RenderResult
 from textual.widgets import Button, RichLog
 from textual.app import App, ComposeResult
@@ -24,6 +25,7 @@ import asyncio
 from datetime import datetime
 import subprocess
 import os
+import glob
 
 
 def banner():
@@ -49,6 +51,7 @@ class BusyPopup(Screen):
 
 
 class Page(VerticalScroll):
+    BEEST_DIR = os.path.expanduser("~/.beest")
     def set_busy(self, busy: bool):
         if busy:
             self.app.push_screen(BusyPopup())
@@ -59,6 +62,11 @@ class Page(VerticalScroll):
         if(id != ''):
             return self.query_one("#"+id, Logr)
         return self.query_one(Logr)
+
+    def root(self):
+        root = next(
+            (item for item in self.ancestors if isinstance(item, Beest)), None)
+        return root
 
 
 class Config:
@@ -71,6 +79,7 @@ class State:
 
 class Logr(RichLog):
     markup = True
+    highlight = True
 
     def out(self, msg, *args, **kwargs):
         super(self.__class__, self).write(f"{msg}", *args, **kwargs)
@@ -167,7 +176,7 @@ class InstallBeePage(Page):
         with Vertical():
             yield Markdown("# BEEST / Install / Bee")
             with Center():
-                yield Button("Install Latest Bee Version", id="install-bee")
+                yield Button("Install Latest Bee + Tools", id="install-bee")
             yield Logr(markup=True).write(self.installed_bee_versions())
 
 
@@ -242,6 +251,56 @@ class SettingsPage(Page):
     pass
 
 
+class BeeMonitorPage(Page):
+    active_bee = ""
+
+    def compose(self) -> ComposeResult:
+        with Vertical():
+            yield Markdown(f"# BEEST / Monitor / Bee")
+            with TabbedContent():
+                with TabPane("Overview",id="overview-tab"):
+                    yield Button("Show Bee Info", id="overview")
+                with TabPane("Logs (HEAD)", id="out-head"):
+                    yield Markdown("")
+                    yield Button("Show Logs (BEGIN)", id="out-begin")
+                with TabPane("Logs (TAIL)", id="out-tail"):
+                    yield Markdown("")
+                    yield Button("Show Logs (END)", id="out-end")
+                with TabPane("Errors (HEAD)", id="err-head"):
+                    yield Markdown("")
+                    yield Button("Show Error Logs (BEGIN)", id="err-begin")
+                with TabPane("Errors (TAIL)", id="err-tail"):
+                    yield Markdown("")
+                    yield Button("Show Error Logs (END)", id="err-end")
+            yield Logr(markup=True)
+    
+    @on(TabbedContent.TabActivated)
+    def tab_changed(self, event: TabbedContent.TabActivated):
+        # self.logr().write(f"Switched to {event.tab.label}")
+        pass
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.logr().clear().write(f"{self.active_bee},{event.button.id}")
+        event.prevent_default()
+        match event.button.id:
+            case 'out-begin':
+                self.run_worker(self.show_log('head','out'), exclusive=True)
+            case 'out-end':
+                self.run_worker(self.show_log('tail','out'), exclusive=True)
+            case 'err-begin':
+                self.run_worker(self.show_log('head','error'), exclusive=True)
+            case 'err-end':
+                self.run_worker(self.show_log('tail','error'), exclusive=True)
+            case 'overview':
+                self.run_worker(self.show_overview(), exclusive=True)
+    
+    async def show_overview(self):
+        await Util.run_script('python', 'bee_overview.py', [str(self.active_bee)], self, self.logr())
+    async def show_log(self, head_or_tail, error_or_out):
+        await Util.run_script('bash', 'get_logs.sh', [f"{head_or_tail}", f"{self.active_bee.replace('_', '-')}", f"{error_or_out}"], self, self.logr())
+        # self.logr().write("hello")
+
+
 verbosityOptions = [("0: silent", 0), ("1: error", 1), ("2: warn", 2),
                     ("3: info", 3), ("4: debug", 4), ("5: trace", 5)]
 
@@ -254,8 +313,11 @@ class RunBeePage(Page):
     async def run_bee_ultralight(self):
         await Util.run_script('python3', 'run_bee.py', [
             '--mode', 'ultralight',
-            '--verbosity', str(self.query_one('#verbosity-ul', Select).value)
+            '--verbosity', str(self.query_one('#verbosity-ul', Select).value),
+            '--nbhood', self.query_one('#nbhood', Input).value
         ], self, self.logr())
+        self.root().updateTree()
+        # self.logr().write(root.tree)
 
     async def run_bee_light(self):
         await Util.run_script('python3', 'run_bee.py', [
@@ -270,56 +332,82 @@ class RunBeePage(Page):
             '--rpc', self.query_one('#gnosis-rpc', Input).value,
             '--verbosity', str(self.query_one('#verbosity-l', Select).value)
         ], self, self.logr())
-
+    
+    def bee_count(self):
+        return len(glob.glob(f"{self.BEEST_DIR}/bees/scripts/*.sh"))
+    
     async def delete_bees(self):
         await Util.run_script('python3', 'delete_bees.py', [], self, self.logr())
+        self.root().updateTree()
+
+    async def show_bees(self):
+        await Util.run_script('python3', 'show_bees.py', [], self, self.logr())
 
     async def stop_bees(self):
         await Util.run_script('python3', 'stop_bees.py', [], self, self.logr())
-    # def on_tab_activated(self, event: Tabs.TabActivated) -> None:
-    #     self.logr().clear().write("Activated")
+    
+    async def start_bees(self):
+        
+        await Util.run_script('python3', 'start_bees.py', [], self, self.logr())
+
+    @on(TabbedContent.TabActivated)
+    def tab_changed(self, event: TabbedContent.TabActivated):
+        # self.logr().write(f"Switched to {event.tab.label}")
+        pass
 
     def compose(self) -> ComposeResult:
         yield Markdown("# Run Bee")
         with TabbedContent():
-            with TabPane("FULL NODE", id="bee-full"):
+            with TabPane("RUN A BEE NODE", id="run-bee"):
+                yield Markdown("")
+                # with TabbedContent():
+                #     with TabPane("ULTRALIGHT NODE", id="bee-ultralight"):
                 yield Markdown("")
                 with Horizontal():
-                    yield Label("Gnosis RPC URL:")
-                    yield Input(placeholder="Gnosis RPC Endpoint [or] Etherproxy URL", id="gnosis-rpc", value="")
-                with Horizontal():
-                    yield Label("Verbosity:")
-                    yield Select(verbosityOptions, id="verbosity-f", value=5)
-                with Horizontal(classes="submit"):
-                    yield Button("Run a Fullnode", id="fullnode")
-            with TabPane("LIGHT NODE", id="bee-light"):
-                yield Markdown("")
-                with Horizontal():
-                    yield Label("Gnosis RPC URL:")
-                    yield Input(placeholder="Gnosis RPC Endpoint [or] Etherproxy URL", id="gnosis-rpc-l", value="")
-                with Horizontal():
-                    yield Label("Verbosity:")
-                    yield Select(verbosityOptions, id="verbosity-l", value=5)
-                with Horizontal(classes="submit"):
-                    yield Button("Run a light node", id="lightnode")
-
-            with TabPane("ULTRALIGHT NODE", id="bee-ultralight"):
-                yield Markdown("")
+                    yield Label("Neighbourhood:")
+                    yield Input(placeholder="Target Neigbourhood", id="nbhood", value="")
                 with Horizontal():
                     yield Label("Verbosity:")
                     yield Select(verbosityOptions, id="verbosity-ul", value=5)
                 with Horizontal(classes="submit"):
-                    yield Button("Run an ultralight node", id="ultralightnode")
-
-            with TabPane("DEV MODE", id="bee-dev"):
+                    yield Button("Run a mainnet node", id="ultralightnode")
+                    yield Button("Run a testnet node", id="ultralightnode-test")
+                    # with TabPane("LIGHT NODE", id="bee-light"):
+                    #     yield Markdown("")
+                    #     with Horizontal():
+                    #         yield Label("Gnosis RPC URL:")
+                    #         yield Input(placeholder="Gnosis RPC Endpoint [or] Etherproxy URL", id="gnosis-rpc-l", value="")
+                    #     with Horizontal():
+                    #         yield Label("Verbosity:")
+                    #         yield Select(verbosityOptions, id="verbosity-l", value=5)
+                    #     with Horizontal(classes="submit"):
+                    #         yield Button("Run a light node", id="lightnode")
+                    # with TabPane("FULL NODE", id="bee-full"):
+                    #     yield Markdown("")
+                    #     with Horizontal():
+                    #         yield Label("Gnosis RPC URL:")
+                    #         yield Input(placeholder="Gnosis RPC Endpoint [or] Etherproxy URL", id="gnosis-rpc", value="")
+                    #     with Horizontal():
+                    #         yield Label("Verbosity:")
+                    #         yield Select(verbosityOptions, id="verbosity-f", value=5)
+                    #     with Horizontal(classes="submit"):
+                    #         yield Button("Run a Fullnode", id="fullnode")
+                    # with TabPane("DEV MODE", id="bee-dev"):
+                    #     yield Markdown("")
+                    #     yield Button("Run Bee in developer mode", id="devmode")
+            with TabPane("SHOW BEES", id="bee-show"):
                 yield Markdown("")
-                yield Button("Run Bee in developer mode", id="devmode")
-            with TabPane("DELETE BEES", id="bee-delete"):
+                yield Button("Show all bees", id="show_bees")
+            with TabPane("START BEES", id="bee-start"):
                 yield Markdown("")
-                yield Button("Delete all bees", id="delete_bees")
+                yield Button("Start all bees", id="start_bees")
             with TabPane("STOP BEES", id="bee-stop"):
                 yield Markdown("")
                 yield Button("Stop all bees", id="stop_bees")
+            with TabPane("DELETE BEES", id="bee-delete"):
+                yield Markdown("")
+                with Horizontal():
+                    yield Button("Delete all bees", id="delete_bees")
         yield Logr(markup=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -328,6 +416,7 @@ class RunBeePage(Page):
             case 'ultralightnode':
                 cmd = f"bee start --full-node=false --swap-enable=false --debug-api-enable=true --verbosity={self.query_one('#verbosity-ul',Select).value}"
                 event.prevent_default()
+                self.logr().write( f" {self.query_one('#nbhood',Input).value} " )
                 self.run_worker(self.run_bee_ultralight(), exclusive=True)
             case 'lightnode':
                 rpc_input = self.query_one('#gnosis-rpc-l', Input)
@@ -349,16 +438,33 @@ class RunBeePage(Page):
                 self.run_worker(self.run_bee_full(), exclusive=True)
             case 'delete_bees':
                 event.prevent_default()
-                self.run_worker(self.delete_bees(), exclusive=True)
+                if(self.bee_count() > 0):
+                    self.run_worker(self.delete_bees(), exclusive=True)
+                else:
+                    self.logr().write('No bees to delete!')
+            case 'show_bees':
+                event.prevent_default()
+                if(self.bee_count() > 0):
+                    self.run_worker(self.show_bees(), exclusive=True)
+                else:
+                    self.logr().write('No bees to show!')
             case 'stop_bees':
                 event.prevent_default()
-                self.run_worker(self.stop_bees(), exclusive=True)
-
-        self.logr().write(Util.now()+' : '+cmd)
+                if(self.bee_count() > 0):
+                    self.run_worker(self.stop_bees(), exclusive=True)
+                else:
+                    self.logr().write('No bees to stop!')
+            case 'start_bees':
+                event.prevent_default()
+                if(self.bee_count() > 0):
+                    self.run_worker(self.start_bees(), exclusive=True)
+                else:
+                    self.logr().write('No bees to start!')
 
 
 class Beest(App[str]):
-    default_page = "page-install-bee"
+
+    default_page = "page-beest"
     CSS_PATH = "./style.tcss"
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
@@ -366,39 +472,49 @@ class Beest(App[str]):
     ]
     APP_PATH = os.path.expanduser("~/.beest")
     BIN_PATH = APP_PATH + "/bin/bee"
+    tree: Tree[dict] = Tree("BEEST", id="sidebar")
+
+    def updateTree(self):
+        bee_scripts = glob.glob(f"{self.APP_PATH}/bees/scripts/*.sh")
+        bee_scripts = [os.path.splitext(os.path.basename(path))[
+            0] for path in bee_scripts]
+        bee_scripts.sort()
+        bees = self.tree.get_node_by_id(8)
+        bees.remove_children()
+        for i, bee_script in enumerate(bee_scripts):
+            bees.add_leaf(f"{i+1}: {bee_script}")
 
     def Sidebar(self):
-        tree: Tree[dict] = Tree("BEEST", id="sidebar")
-
-        install = tree.root.add("INSTALL", expand=True)
+        install = self.tree.root.add("INSTALL", expand=True)
         install.add_leaf("Bee")
         install.add_leaf("Etherproxy")
         install.add_leaf("Bee Factory")
         install.add_leaf("FDP Play")
 
-        install = tree.root.add("RUN", expand=True)
+        install = self.tree.root.add("RUN", expand=True)
         install.add_leaf("Bee")
         # install.add_leaf("Bee Factory")
         # install.add_leaf("FDP Play")
 
-        install = tree.root.add("MONITOR", expand=True)
+        install = self.tree.root.add("MONITOR", expand=True)
         # install.add_leaf("Bee001")
         # install.add_leaf("Bee002")
         # install.add_leaf("Bee003")
         # install.add_leaf("Bee004")
 
-        install = tree.root.add("SETTINGS", expand=True)
+        install = self.tree.root.add("SETTINGS", expand=True)
         # install.add_leaf("Bee")
         # install.add_leaf("Etherproxy")
 
-        tree.root.expand_all()
-        return tree
+        self.tree.root.expand_all()
+        return self.tree
 
     def compose(self) -> ComposeResult:
         with Vertical():
             yield Header("BEEST")
             with Horizontal():
                 yield self.Sidebar()
+                self.updateTree()
                 with ContentSwitcher(id="switch", initial=self.default_page):
                     yield BeestPage(id="page-beest")
                     yield InstallPage(id="page-beest-install")
@@ -410,19 +526,30 @@ class Beest(App[str]):
                     yield RunBeePage(id="page-run-bee")
                     yield MonitorPage(id="page-beest-monitor")
                     yield SettingsPage(id="page-beest-settings")
-            # yield Logr(id="logr")
+                    yield BeeMonitorPage(id="page-bee-monitor")
+            # yield Logr(id="mainlogr")
             yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         pass
 
     def on_tree_node_selected(self, event: Tree.NodeSelected) -> None:
+        # self.query_one("#mainlogr",Logr).write(f"{event.node.id} {event.node.label}")
         self.query_one(Tree).root.expand_all()
         if event.node.id == 0:
             nodeid = "page-beest"
         else:
             nodeid = f"page-{Util.dasherize(event.node.parent.label)}-{Util.dasherize(event.node.label)}"
-        self.query_one("#switch", ContentSwitcher).current = nodeid
+        try:
+            self.query_one("#switch", ContentSwitcher).current = nodeid
+        except Exception as err:
+            # self.query_one("#mainlogr", Logr).write(event.node.label)
+            beePage = self.query_one("#page-bee-monitor")
+            beePage.active_bee = str(event.node.label.split(': ').pop())
+            beePage.logr().clear()
+            beePage.query_one('#overview',Button).label = f"Show Info: {beePage.active_bee.upper()} "
+            self.query_one(
+                "#switch", ContentSwitcher).current = "page-bee-monitor"
 
     def on_mount(self):
         pass

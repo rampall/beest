@@ -7,6 +7,7 @@ RichLog{
     padding:1 2;
     height:auto;
     min-height:8;
+    max-height:25;
 }
 Page{
     padding:1 2 0 2;
@@ -16,6 +17,7 @@ Page{
 }
 Button{
     background:#FF7A00;
+    margin:0 1;
 }
 Button:hover{
     background:#F60;
@@ -26,7 +28,9 @@ Button:hover{
 InstallBeePage{
     align: center top;
 }
-
+.centered{
+    align: center top;
+}
 Label.d{
     color:#666666;
 }
@@ -64,4 +68,7 @@ Logr .clear{
     width:100%;
     background:red;
     margin-bottom:1;
+}
+#bee-title{
+    
 }
