@@ -1,4 +1,4 @@
-**Warning: This project is a WIP in alpha state. And is being actively developed. No guarantees can be made about its stability, efficiency, and security at this stage.**
+**Warning: This project is a WIP in early alpha. And is being actively developed. No guarantees can be made about its stability, efficiency, and security at this stage.**
 
 
 # Beest
