@@ -14,7 +14,7 @@ A swiss army knife for the Swarm ecosystem
 ```
 
 
-Beest is a TUI app to install, run and manage multiple bee nodes. It also integrates with other tools in the Swarm ecosystem:
+Beest is a TUI app to install, run and manage multiple bee nodes. It also integrates with other developer tools in the Swarm ecosystem:
 
 - https://github.com/ethersphere/etherproxy
 - https://github.com/ethersphere/bee-factory
