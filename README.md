@@ -1,3 +1,6 @@
+**Warning: This project is a WIP in alpha state. And is being actively developed. No guarantees can be made about its stability, efficiency, and security at this stage.**
+
+
 # Beest
 ```
 ██████╗ ███████╗███████╗███████╗████████╗ 0.1.0
@@ -9,6 +12,7 @@
 
 A swiss army knife for the Swarm ecosystem
 ```
+
 
 Beest is a TUI app to install, run and manage multiple bee nodes. It also integrates with other tools in the Swarm ecosystem:
 
@@ -41,7 +45,7 @@ python3 ./beest.py
 - [x] Install FDP Play
 - [x] Run bee in Ultralight mode
 - [x] Stop all bees
-- [x] Remove all bees
+- [ ] Remove all bees (Backup and Soft Delete)
 - [ ] Run Etherproxy
 - [ ] Funding wallet + Automatic funding of full nodes
 - [ ] Monitor Bees
