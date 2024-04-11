@@ -56,11 +56,15 @@ def ensure_init(bee_id):
 
 
 def get_new_beeid():
-    file_list = [file for file in os.listdir(
-        BEES_SCRIPT_DIR) if os.path.isfile(os.path.join(BEES_SCRIPT_DIR, file))]
-    # Count the number of files
-    file_count = len(file_list)
-    return file_count+1
+    try:
+        file_list = [file for file in os.listdir(
+            BEES_SCRIPT_DIR) if os.path.isfile(os.path.join(BEES_SCRIPT_DIR, file))]
+        # Count the number of files
+        file_count = len(file_list)
+        return file_count+1
+    except FileNotFoundError:
+        return 1
+    
 
 
 def next_free_port(port, max_port=65535):

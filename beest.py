@@ -99,9 +99,10 @@ class Util:
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
-    async def run_script(cmd, script_file, args, page: Page, logr: Logr):
+    async def run_script(cmd, script_file, args, page: Page, logr: Logr, clear=True):
         exec_cmd = [cmd, f"{os.getcwd()}/scripts/{script_file}", *args]
-        logr.clear()
+        if(clear):
+            logr.clear()
         print(
             f"EXECUTING: [code]{ ' '.join(str(item) for item in exec_cmd) }[/code]")
         # exit(0)
@@ -152,6 +153,8 @@ class InstallBeePage(Page):
     async def install_bee(self):
         await Util.run_script('bash', 'install_bee.sh', [], self, self.logr())
         self.logr().write("\n"+self.installed_bee_versions())
+        await Util.run_script('bash', 'install_tools.sh', [], self, self.logr(), False)
+        
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.logr().clear()
@@ -176,7 +179,7 @@ class InstallBeePage(Page):
         with Vertical():
             yield Markdown("# BEEST / Install / Bee")
             with Center():
-                yield Button("Install Latest Bee + Tools", id="install-bee")
+                yield Button("Install Latest Bee + PM2 + Swarm CLI", id="install-bee")
             yield Logr(markup=True).write(self.installed_bee_versions())
 
 
@@ -214,7 +217,6 @@ class InstallBeeFactoryPage(Page):
                 yield Button("Install Bee Factory", id="install-bee-factory")
             yield Logr(markup=True)
 
-
 class InstallFdpPlayPage(Page):
     async def install_fdp_play(self):
         await Util.run_script('bash', 'install_fdp_play.sh', [], self, self.logr())
@@ -231,13 +233,11 @@ class InstallFdpPlayPage(Page):
                 yield Button("Install FDP Play", id="install-fdp-play")
             yield Logr(markup=True)
 
-
 class BeestPage(Page):
     def compose(self) -> ComposeResult:
         with Horizontal(classes="banner"):
             with Center():
                 yield Label(banner())
-
 
 class RunPage(Page):
     pass
